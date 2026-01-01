@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Shroppie | Multi-Vendor Marketplace</title>
+<title>Shroppie | Marketplace</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
@@ -51,6 +51,16 @@ input {
   margin: 8px 0;
 }
 .hidden { display: none; }
+.cartBox {
+  position: fixed;
+  top: 15px;
+  right: 20px;
+  background: white;
+  padding: 10px 15px;
+  border-radius: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  font-weight: bold;
+}
 </style>
 </head>
 
@@ -61,12 +71,15 @@ input {
   <nav>
     <a href="#vendors">Sell</a>
     <a href="#products">Shop</a>
+    <a href="#checkout">Checkout</a>
   </nav>
 </header>
 
+<div class="cartBox">🛒 Cart: <span id="cartCount">0</span></div>
+
 <section class="section">
-  <h1>Real Multi-Vendor Marketplace</h1>
-  <p>Businesses register → add products → customers buy</p>
+  <h1>Multi-Vendor Marketplace MVP</h1>
+  <p>Businesses add products → customers checkout & pay</p>
 </section>
 
 <!-- VENDOR REGISTRATION -->
@@ -84,7 +97,7 @@ input {
 
 <!-- ADD PRODUCT -->
 <section class="section hidden" id="productForm">
-  <h2>📦 Add Product (Vendor)</h2>
+  <h2>📦 Add Product</h2>
   <div class="card">
     <form onsubmit="addProduct(event)">
       <input id="productName" placeholder="Product Name" required>
@@ -96,31 +109,49 @@ input {
 
 <!-- PRODUCTS -->
 <section id="products" class="section">
-  <h2>🛒 Available Products</h2>
+  <h2>🛒 Products</h2>
   <div id="productList"></div>
+</section>
+
+<!-- CHECKOUT -->
+<section id="checkout" class="section hidden">
+  <h2>💳 Checkout</h2>
+  <div class="card">
+    <ul id="checkoutItems"></ul>
+    <h3>Total: $<span id="totalPrice">0</span></h3>
+
+    <h4>Payment Details</h4>
+    <input placeholder="Card Number (demo)">
+    <input placeholder="Expiry MM/YY">
+    <input placeholder="CVV">
+    <button onclick="payNow()">Pay Now</button>
+
+    <p id="paymentMsg"></p>
+  </div>
 </section>
 
 <script>
 let vendors = JSON.parse(localStorage.getItem("vendors")) || [];
 let products = JSON.parse(localStorage.getItem("products")) || [];
+let cart = JSON.parse(localStorage.getItem("cart")) || [];
+
+cartCount.innerText = cart.length;
 
 function registerVendor(e) {
   e.preventDefault();
-  const name = vendorName.value;
-  vendors.push(name);
+  vendors.push(vendorName.value);
   localStorage.setItem("vendors", JSON.stringify(vendors));
-  vendorMsg.innerText = "✅ Vendor registered. You can now add products.";
+  vendorMsg.innerText = "✅ Vendor registered. Add products below.";
   document.getElementById("productForm").classList.remove("hidden");
 }
 
 function addProduct(e) {
   e.preventDefault();
-  const product = {
+  products.push({
     name: productName.value,
-    price: productPrice.value,
+    price: parseFloat(productPrice.value),
     vendor: vendors[vendors.length - 1]
-  };
-  products.push(product);
+  });
   localStorage.setItem("products", JSON.stringify(products));
   renderProducts();
   productName.value = "";
@@ -129,28 +160,47 @@ function addProduct(e) {
 
 function renderProducts() {
   productList.innerHTML = "";
-  products.forEach(p => {
-    const div = document.createElement("div");
-    div.className = "card";
-    div.innerHTML = `
-      <h3>${p.name}</h3>
-      <p>Sold by: ${p.vendor}</p>
-      <strong>$${p.price}</strong><br><br>
-      <button onclick="buy('${p.name}')">Buy</button>
-    `;
-    productList.appendChild(div);
+  products.forEach((p, i) => {
+    productList.innerHTML += `
+      <div class="card">
+        <h3>${p.name}</h3>
+        <p>Sold by ${p.vendor}</p>
+        <strong>$${p.price}</strong><br><br>
+        <button onclick="addToCart(${i})">Add to Cart</button>
+      </div>`;
   });
 }
 
-function buy(name) {
-  alert("🛒 Order placed for " + name + " (payment coming soon)");
+function addToCart(i) {
+  cart.push(products[i]);
+  localStorage.setItem("cart", JSON.stringify(cart));
+  cartCount.innerText = cart.length;
 }
+
+function loadCheckout() {
+  checkoutItems.innerHTML = "";
+  let total = 0;
+  cart.forEach(item => {
+    checkoutItems.innerHTML += `<li>${item.name} - $${item.price}</li>`;
+    total += item.price;
+  });
+  totalPrice.innerText = total.toFixed(2);
+  document.getElementById("checkout").classList.remove("hidden");
+}
+
+function payNow() {
+  paymentMsg.innerText = "✅ Payment successful! Order placed.";
+  cart = [];
+  localStorage.removeItem("cart");
+  cartCount.innerText = 0;
+}
+
+window.addEventListener("hashchange", () => {
+  if (location.hash === "#checkout") loadCheckout();
+});
 
 renderProducts();
 </script>
 
 </body>
 </html>
-
-
-
