@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Shroppie | Online Marketplace</title>
+<title>Shroppie | Multi-Vendor Marketplace</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
@@ -11,87 +11,46 @@ body {
   font-family: Arial, sans-serif;
   background: #f4f6f8;
 }
-
 header {
   background: #1a73e8;
   color: white;
   padding: 15px 30px;
   display: flex;
   justify-content: space-between;
-  align-items: center;
 }
-
 nav a {
   color: white;
-  margin-left: 20px;
+  margin-left: 15px;
   text-decoration: none;
   font-weight: bold;
 }
-
-.hero {
-  padding: 60px 20px;
-  text-align: center;
-  background: linear-gradient(120deg, #1a73e8, #34a853);
-  color: white;
-}
-
 .section {
   padding: 40px 20px;
   max-width: 1100px;
   margin: auto;
 }
-
-.cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px,1fr));
-  gap: 20px;
-}
-
 .card {
   background: white;
   padding: 20px;
   border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-  text-align: center;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
-
 button {
   background: #1a73e8;
   color: white;
   border: none;
-  padding: 12px 18px;
+  padding: 10px 16px;
   border-radius: 5px;
   cursor: pointer;
-  font-size: 16px;
 }
-
 button:hover { background: #1558b0; }
-
-.cart {
-  position: fixed;
-  top: 15px;
-  right: 20px;
-  background: white;
-  padding: 10px 15px;
-  border-radius: 20px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-  font-weight: bold;
-}
-
-.hidden { display: none; }
-
-form input {
+input {
   width: 100%;
   padding: 10px;
   margin: 8px 0;
 }
-
-footer {
-  background: #1a73e8;
-  color: white;
-  text-align: center;
-  padding: 20px;
-}
+.hidden { display: none; }
 </style>
 </head>
 
@@ -100,89 +59,98 @@ footer {
 <header>
   <h2>shroppie.com</h2>
   <nav>
-    <a href="#shop">Shop</a>
     <a href="#vendors">Sell</a>
-    <a href="#cartSection">Cart</a>
+    <a href="#products">Shop</a>
   </nav>
 </header>
 
-<div class="cart">🛒 Cart: <span id="cartCount">0</span></div>
-
-<section class="hero">
-  <h1>Buy Anything. Sell Everything.</h1>
-  <p>A real multi-vendor marketplace MVP</p>
-</section>
-
-<!-- SHOP -->
-<section id="shop" class="section">
-<h2>Products</h2>
-<div class="cards">
-  <div class="card">
-    <h3>Wireless Headphones</h3>
-    <p>$49.99</p>
-    <button onclick="addToCart('Wireless Headphones')">Buy Now</button>
-  </div>
-  <div class="card">
-    <h3>Men’s Sneakers</h3>
-    <p>$69.99</p>
-    <button onclick="addToCart('Men’s Sneakers')">Buy Now</button>
-  </div>
-  <div class="card">
-    <h3>Kitchen Mixer</h3>
-    <p>$89.99</p>
-    <button onclick="addToCart('Kitchen Mixer')">Buy Now</button>
-  </div>
-</div>
-</section>
-
-<!-- CART -->
-<section id="cartSection" class="section hidden">
-<h2>Your Cart</h2>
-<ul id="cartItems"></ul>
-<button onclick="checkout()">Proceed to Checkout</button>
+<section class="section">
+  <h1>Real Multi-Vendor Marketplace</h1>
+  <p>Businesses register → add products → customers buy</p>
 </section>
 
 <!-- VENDOR REGISTRATION -->
 <section id="vendors" class="section">
-<h2>Sell on Shroppie</h2>
-
-<form onsubmit="registerVendor(event)">
-  <input type="text" id="businessName" placeholder="Business Name" required>
-  <input type="email" id="email" placeholder="Email" required>
-  <input type="text" id="productType" placeholder="Product Type" required>
-  <button type="submit">Register Business</button>
-</form>
-
-<p id="vendorMsg"></p>
+  <h2>🏪 Vendor Registration</h2>
+  <div class="card">
+    <form onsubmit="registerVendor(event)">
+      <input id="vendorName" placeholder="Business Name" required>
+      <input id="vendorEmail" type="email" placeholder="Business Email" required>
+      <button type="submit">Register Vendor</button>
+    </form>
+    <p id="vendorMsg"></p>
+  </div>
 </section>
 
-<footer>
-© 2025 shroppie.com — Marketplace MVP
-</footer>
+<!-- ADD PRODUCT -->
+<section class="section hidden" id="productForm">
+  <h2>📦 Add Product (Vendor)</h2>
+  <div class="card">
+    <form onsubmit="addProduct(event)">
+      <input id="productName" placeholder="Product Name" required>
+      <input id="productPrice" placeholder="Price" required>
+      <button type="submit">Add Product</button>
+    </form>
+  </div>
+</section>
+
+<!-- PRODUCTS -->
+<section id="products" class="section">
+  <h2>🛒 Available Products</h2>
+  <div id="productList"></div>
+</section>
 
 <script>
-let cart = [];
-
-function addToCart(product) {
-  cart.push(product);
-  document.getElementById("cartCount").innerText = cart.length;
-  document.getElementById("cartSection").classList.remove("hidden");
-
-  const li = document.createElement("li");
-  li.innerText = product;
-  document.getElementById("cartItems").appendChild(li);
-}
-
-function checkout() {
-  alert("Checkout coming soon 🚀 (Stripe integration next)");
-}
+let vendors = JSON.parse(localStorage.getItem("vendors")) || [];
+let products = JSON.parse(localStorage.getItem("products")) || [];
 
 function registerVendor(e) {
   e.preventDefault();
-  document.getElementById("vendorMsg").innerText =
-    "✅ Business registered! Our team will contact you.";
+  const name = vendorName.value;
+  vendors.push(name);
+  localStorage.setItem("vendors", JSON.stringify(vendors));
+  vendorMsg.innerText = "✅ Vendor registered. You can now add products.";
+  document.getElementById("productForm").classList.remove("hidden");
 }
+
+function addProduct(e) {
+  e.preventDefault();
+  const product = {
+    name: productName.value,
+    price: productPrice.value,
+    vendor: vendors[vendors.length - 1]
+  };
+  products.push(product);
+  localStorage.setItem("products", JSON.stringify(products));
+  renderProducts();
+  productName.value = "";
+  productPrice.value = "";
+}
+
+function renderProducts() {
+  productList.innerHTML = "";
+  products.forEach(p => {
+    const div = document.createElement("div");
+    div.className = "card";
+    div.innerHTML = `
+      <h3>${p.name}</h3>
+      <p>Sold by: ${p.vendor}</p>
+      <strong>$${p.price}</strong><br><br>
+      <button onclick="buy('${p.name}')">Buy</button>
+    `;
+    productList.appendChild(div);
+  });
+}
+
+function buy(name) {
+  alert("🛒 Order placed for " + name + " (payment coming soon)");
+}
+
+renderProducts();
 </script>
 
 </body>
 </html>
+
+
+
