@@ -1,84 +1,97 @@
-<!--
-FILE: index.html
-ROLE: Page structure (UI only)
-NOTE: All logic is in app.js
--->
+/*
+FILE: app.js
+ROLE: Application logic
+CONNECTED TO: index.html via <script src="app.js">
+*/
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>Shroppie | Online Marketplace</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+// ===== App State =====
+let vendors = [];
+let products = [];
+let cart = [];
+let currentVendor = null;
 
-  <style>
-    body { font-family: Arial; background:#f4f6f8; margin:0; }
-    header { background:#1a73e8; color:#fff; padding:15px 30px; display:flex; justify-content:space-between; }
-    nav a { color:white; margin-left:15px; text-decoration:none; font-weight:bold; }
-    .section { max-width:1100px; margin:auto; padding:30px 20px; }
-    .card { background:white; padding:20px; border-radius:8px; margin-bottom:20px; }
-    button { background:#1a73e8; color:white; border:none; padding:10px 16px; border-radius:5px; cursor:pointer; }
-    input, select { width:100%; padding:10px; margin:8px 0; }
-    .hidden { display:none; }
-    .badge { background:#34a853; color:white; padding:4px 8px; font-size:12px; border-radius:4px; }
-  </style>
-</head>
+// ===== DOM Elements =====
+const vendorMsg = document.getElementById("vendorMsg");
+const productSection = document.getElementById("productSection");
+const productList = document.getElementById("productList");
+const checkoutSection = document.getElementById("checkout");
+const checkoutItems = document.getElementById("checkoutItems");
+const totalPriceEl = document.getElementById("totalPrice");
+const paymentMsg = document.getElementById("paymentMsg");
 
-<body>
+// ===== Vendor Registration =====
+document.getElementById("registerVendorBtn").onclick = () => {
+  const name = vendorName.value.trim();
+  const email = vendorEmail.value.trim();
+  const plan = vendorPlan.value;
 
-<header>
-  <h2>shroppie.com</h2>
-  <nav>
-    <a href="#sell">Sell</a>
-    <a href="#shop">Shop</a>
-    <a href="#checkout">Checkout</a>
-  </nav>
-</header>
+  if (!name || !email || !plan) {
+    vendorMsg.innerText = "❌ Fill all fields";
+    return;
+  }
 
-<section class="section">
-  <h1>Multi-Vendor Marketplace</h1>
-  <p>Businesses register, pay fees, get free ads, and sell products.</p>
-</section>
+  currentVendor = { name, email, plan };
+  vendors.push(currentVendor);
 
-<section id="sell" class="section">
-  <div class="card">
-    <h2>Vendor Registration</h2>
-    <input id="vendorName" placeholder="Business Name">
-    <input id="vendorEmail" placeholder="Email">
-    <select id="vendorPlan">
-      <option value="">Choose Plan</option>
-      <option value="basic">Basic – $19/month</option>
-      <option value="pro">Pro – $49/month</option>
-    </select>
-    <button id="registerVendorBtn">Register & Pay</button>
-    <p id="vendorMsg"></p>
-  </div>
+  vendorMsg.innerText = "✅ Vendor registered (payment step later)";
+  productSection.classList.remove("hidden");
+};
 
-  <div id="productSection" class="card hidden">
-    <h2>Add Product</h2>
-    <input id="productName" placeholder="Product Name">
-    <input id="productPrice" placeholder="Price">
-    <button id="addProductBtn">Add Product</button>
-  </div>
-</section>
+// ===== Add Product =====
+document.getElementById("addProductBtn").onclick = () => {
+  const name = productName.value.trim();
+  const price = Number(productPrice.value);
 
-<section id="shop" class="section">
-  <h2>Products</h2>
-  <div id="productList"></div>
-</section>
+  if (!name || price <= 0) return;
 
-<section id="checkout" class="section hidden">
-  <div class="card">
-    <h2>Checkout</h2>
-    <ul id="checkoutItems"></ul>
-    <strong>Total: $<span id="totalPrice">0</span></strong><br><br>
-    <button id="payBtn">Pay Now</button>
-    <p id="paymentMsg"></p>
-  </div>
-</section>
+  products.push({
+    name,
+    price,
+    vendor: currentVendor.name
+  });
 
-<!-- IMPORTANT: This connects index.html to app.js -->
-<script src="app.js"></script>
+  renderProducts();
+  productName.value = "";
+  productPrice.value = "";
+};
 
-</body>
-</html>
+// ===== Render Products =====
+function renderProducts() {
+  productList.innerHTML = "";
+
+  products.forEach((p, i) => {
+    productList.innerHTML += `
+      <div class="card">
+        <span class="badge">FREE AD</span>
+        <h3>${p.name}</h3>
+        <p>Sold by ${p.vendor}</p>
+        <strong>$${p.price}</strong><br><br>
+        <button onclick="addToCart(${i})">Add to Cart</button>
+      </div>
+    `;
+  });
+}
+
+window.addToCart = (index) => {
+  cart.push(products[index]);
+  loadCheckout();
+};
+
+// ===== Checkout =====
+function loadCheckout() {
+  checkoutSection.classList.remove("hidden");
+  checkoutItems.innerHTML = "";
+  let total = 0;
+
+  cart.forEach(item => {
+    checkoutItems.innerHTML += `<li>${item.name} – $${item.price}</li>`;
+    total += item.price;
+  });
+
+  totalPriceEl.innerText = total.toFixed(2);
+}
+
+document.getElementById("payBtn").onclick = () => {
+  paymentMsg.innerText = "✅ Payment successful (real Stripe later)";
+  cart = [];
+};
