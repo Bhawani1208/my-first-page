@@ -1,67 +1,27 @@
+<!--
+FILE: index.html
+ROLE: Page structure (UI only)
+NOTE: All logic is in app.js
+-->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Shroppie | Marketplace</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8" />
+  <title>Shroppie | Online Marketplace</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-<style>
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background: #f4f6f8;
-}
-header {
-  background: #1a73e8;
-  color: white;
-  padding: 15px 30px;
-  display: flex;
-  justify-content: space-between;
-}
-nav a {
-  color: white;
-  margin-left: 15px;
-  text-decoration: none;
-  font-weight: bold;
-}
-.section {
-  padding: 40px 20px;
-  max-width: 1100px;
-  margin: auto;
-}
-.card {
-  background: white;
-  padding: 20px;
-  border-radius: 8px;
-  margin-bottom: 20px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-button {
-  background: #1a73e8;
-  color: white;
-  border: none;
-  padding: 10px 16px;
-  border-radius: 5px;
-  cursor: pointer;
-}
-button:hover { background: #1558b0; }
-input {
-  width: 100%;
-  padding: 10px;
-  margin: 8px 0;
-}
-.hidden { display: none; }
-.cartBox {
-  position: fixed;
-  top: 15px;
-  right: 20px;
-  background: white;
-  padding: 10px 15px;
-  border-radius: 20px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-  font-weight: bold;
-}
-</style>
+  <style>
+    body { font-family: Arial; background:#f4f6f8; margin:0; }
+    header { background:#1a73e8; color:#fff; padding:15px 30px; display:flex; justify-content:space-between; }
+    nav a { color:white; margin-left:15px; text-decoration:none; font-weight:bold; }
+    .section { max-width:1100px; margin:auto; padding:30px 20px; }
+    .card { background:white; padding:20px; border-radius:8px; margin-bottom:20px; }
+    button { background:#1a73e8; color:white; border:none; padding:10px 16px; border-radius:5px; cursor:pointer; }
+    input, select { width:100%; padding:10px; margin:8px 0; }
+    .hidden { display:none; }
+    .badge { background:#34a853; color:white; padding:4px 8px; font-size:12px; border-radius:4px; }
+  </style>
 </head>
 
 <body>
@@ -69,138 +29,56 @@ input {
 <header>
   <h2>shroppie.com</h2>
   <nav>
-    <a href="#vendors">Sell</a>
-    <a href="#products">Shop</a>
+    <a href="#sell">Sell</a>
+    <a href="#shop">Shop</a>
     <a href="#checkout">Checkout</a>
   </nav>
 </header>
 
-<div class="cartBox">🛒 Cart: <span id="cartCount">0</span></div>
-
 <section class="section">
-  <h1>Multi-Vendor Marketplace MVP</h1>
-  <p>Businesses add products → customers checkout & pay</p>
+  <h1>Multi-Vendor Marketplace</h1>
+  <p>Businesses register, pay fees, get free ads, and sell products.</p>
 </section>
 
-<!-- VENDOR REGISTRATION -->
-<section id="vendors" class="section">
-  <h2>🏪 Vendor Registration</h2>
+<section id="sell" class="section">
   <div class="card">
-    <form onsubmit="registerVendor(event)">
-      <input id="vendorName" placeholder="Business Name" required>
-      <input id="vendorEmail" type="email" placeholder="Business Email" required>
-      <button type="submit">Register Vendor</button>
-    </form>
+    <h2>Vendor Registration</h2>
+    <input id="vendorName" placeholder="Business Name">
+    <input id="vendorEmail" placeholder="Email">
+    <select id="vendorPlan">
+      <option value="">Choose Plan</option>
+      <option value="basic">Basic – $19/month</option>
+      <option value="pro">Pro – $49/month</option>
+    </select>
+    <button id="registerVendorBtn">Register & Pay</button>
     <p id="vendorMsg"></p>
   </div>
-</section>
 
-<!-- ADD PRODUCT -->
-<section class="section hidden" id="productForm">
-  <h2>📦 Add Product</h2>
-  <div class="card">
-    <form onsubmit="addProduct(event)">
-      <input id="productName" placeholder="Product Name" required>
-      <input id="productPrice" placeholder="Price" required>
-      <button type="submit">Add Product</button>
-    </form>
+  <div id="productSection" class="card hidden">
+    <h2>Add Product</h2>
+    <input id="productName" placeholder="Product Name">
+    <input id="productPrice" placeholder="Price">
+    <button id="addProductBtn">Add Product</button>
   </div>
 </section>
 
-<!-- PRODUCTS -->
-<section id="products" class="section">
-  <h2>🛒 Products</h2>
+<section id="shop" class="section">
+  <h2>Products</h2>
   <div id="productList"></div>
 </section>
 
-<!-- CHECKOUT -->
 <section id="checkout" class="section hidden">
-  <h2>💳 Checkout</h2>
   <div class="card">
+    <h2>Checkout</h2>
     <ul id="checkoutItems"></ul>
-    <h3>Total: $<span id="totalPrice">0</span></h3>
-
-    <h4>Payment Details</h4>
-    <input placeholder="Card Number (demo)">
-    <input placeholder="Expiry MM/YY">
-    <input placeholder="CVV">
-    <button onclick="payNow()">Pay Now</button>
-
+    <strong>Total: $<span id="totalPrice">0</span></strong><br><br>
+    <button id="payBtn">Pay Now</button>
     <p id="paymentMsg"></p>
   </div>
 </section>
 
-<script>
-let vendors = JSON.parse(localStorage.getItem("vendors")) || [];
-let products = JSON.parse(localStorage.getItem("products")) || [];
-let cart = JSON.parse(localStorage.getItem("cart")) || [];
-
-cartCount.innerText = cart.length;
-
-function registerVendor(e) {
-  e.preventDefault();
-  vendors.push(vendorName.value);
-  localStorage.setItem("vendors", JSON.stringify(vendors));
-  vendorMsg.innerText = "✅ Vendor registered. Add products below.";
-  document.getElementById("productForm").classList.remove("hidden");
-}
-
-function addProduct(e) {
-  e.preventDefault();
-  products.push({
-    name: productName.value,
-    price: parseFloat(productPrice.value),
-    vendor: vendors[vendors.length - 1]
-  });
-  localStorage.setItem("products", JSON.stringify(products));
-  renderProducts();
-  productName.value = "";
-  productPrice.value = "";
-}
-
-function renderProducts() {
-  productList.innerHTML = "";
-  products.forEach((p, i) => {
-    productList.innerHTML += `
-      <div class="card">
-        <h3>${p.name}</h3>
-        <p>Sold by ${p.vendor}</p>
-        <strong>$${p.price}</strong><br><br>
-        <button onclick="addToCart(${i})">Add to Cart</button>
-      </div>`;
-  });
-}
-
-function addToCart(i) {
-  cart.push(products[i]);
-  localStorage.setItem("cart", JSON.stringify(cart));
-  cartCount.innerText = cart.length;
-}
-
-function loadCheckout() {
-  checkoutItems.innerHTML = "";
-  let total = 0;
-  cart.forEach(item => {
-    checkoutItems.innerHTML += `<li>${item.name} - $${item.price}</li>`;
-    total += item.price;
-  });
-  totalPrice.innerText = total.toFixed(2);
-  document.getElementById("checkout").classList.remove("hidden");
-}
-
-function payNow() {
-  paymentMsg.innerText = "✅ Payment successful! Order placed.";
-  cart = [];
-  localStorage.removeItem("cart");
-  cartCount.innerText = 0;
-}
-
-window.addEventListener("hashchange", () => {
-  if (location.hash === "#checkout") loadCheckout();
-});
-
-renderProducts();
-</script>
+<!-- IMPORTANT: This connects index.html to app.js -->
+<script src="app.js"></script>
 
 </body>
 </html>
